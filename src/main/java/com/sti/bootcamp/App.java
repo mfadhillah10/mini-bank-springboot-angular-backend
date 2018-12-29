@@ -18,8 +18,6 @@ import com.sti.bootcamp.dao.config.DaoSpringConfig;
 @Import({DaoSpringConfig.class})
 public class App 
 {
-//    private static final Object[] apps = null;
-
 	public static void main( String[] args )
     {
         SpringApplication.run(App.class, args);

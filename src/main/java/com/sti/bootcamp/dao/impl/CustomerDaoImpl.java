@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.sti.bootcamp.PostCustomer;
 import com.sti.bootcamp.dao.interfc.CustomerDao;
 import com.sti.bootcamp.dao.repository.CustomerRepository;
+import com.sti.bootcamp.error.ExceptionTemp;
 
 public class CustomerDaoImpl extends BaseImpl implements CustomerDao {
 	
@@ -19,22 +20,22 @@ public class CustomerDaoImpl extends BaseImpl implements CustomerDao {
 	private CustomerRepository repository;
 
 	@Override
-	public PostCustomer getById(int cust_number) throws Exception {
-		return repository.findByCustomernumber(cust_number);
+	public PostCustomer getById(int custnumber) throws ExceptionTemp {
+		return repository.findByCustomernumber(custnumber);
 	}
 
 	@Override
-	public PostCustomer save(PostCustomer customer) throws Exception {
+	public PostCustomer save(PostCustomer customer) throws ExceptionTemp {
 		return repository.save(customer);
 	}
 
 	@Override
-	public void delete(PostCustomer customer) throws Exception {
+	public void delete(PostCustomer customer) throws ExceptionTemp {
 		repository.delete(customer);
 	}
 
 	@Override
-	public List<PostCustomer> getList() throws Exception {
+	public List<PostCustomer> getList() throws ExceptionTemp {
 		CriteriaBuilder critB = em.getCriteriaBuilder();
 		CriteriaQuery<PostCustomer> query = critB.createQuery(PostCustomer.class);
 		Root<PostCustomer> root = query.from(PostCustomer.class);

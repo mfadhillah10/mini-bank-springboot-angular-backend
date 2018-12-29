@@ -9,7 +9,7 @@ import com.sti.bootcamp.model.Transaction;
 
 public interface TrxRepository extends PagingAndSortingRepository<Transaction, Integer> {
 	
-	Transaction findByAccount(int accountNumber);
+	Transaction findByAccount(int id);
 	List<Transaction> findByAccount(Account account);
 
 }

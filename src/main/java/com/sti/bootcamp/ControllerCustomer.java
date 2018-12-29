@@ -1,72 +1,152 @@
 package com.sti.bootcamp;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 import com.sti.bootcamp.dao.interfc.CustomerDao;
+import com.sti.bootcamp.error.ExceptionTemp;
+import com.sti.bootcamp.dto.CommonResponse;
+import com.sti.bootcamp.dto.CustomerDto;
 
 
 @RestController
-@RequestMapping("/cust")
+@SuppressWarnings("rawtypes")
 public class ControllerCustomer {
+	private static final Logger LOGGER = LoggerFactory.getLogger(ControllerCustomer.class);
 	
 	@Autowired
 	private CustomerDao customerDao;
 	
+	@Autowired
+	private ModelMapper modelMapper;
+	
 	// create/save
-	@PostMapping("/customer")
-	public PostCustomer create(@RequestBody PostCustomer customer) throws Exception {
-		customerDao.save(customer);
-		return customer;
-	}
-	
-	@PutMapping("/update")
-	public PostCustomer update(@RequestBody PostCustomer customer) throws Exception {
-		customerDao.save(customer);
-		return customer;
-	}
-	
-	//get by id
-	@GetMapping("/customer")
-	public String hello(@RequestParam(value = "custnumber", defaultValue = "") String cust_number) {
+	@PostMapping(value="/customer")
+	public CommonResponse create(@RequestBody CustomerDto customerDto) throws ExceptionTemp {
 		try {
-			PostCustomer customer = customerDao.getById(Integer.valueOf(cust_number));
-			if (customer == null) {
-				return "Data not found";
-			}
-			else {
-				return "Hello "+customer.getFirstname()+" "+customer.getLastname();
-			}
-		} catch (NumberFormatException e) {
-			return "Wrong input format";
+			PostCustomer customer = modelMapper.map(customerDto, PostCustomer.class);
+			customer.setCustomernumber(0);
+			customer = customerDao.save(customer);
+			return new CommonResponse<CustomerDto>(modelMapper.map(customer, CustomerDto.class));
+		} catch (ExceptionTemp e) {
+			return new CommonResponse("01", e.getMessage());
 		} catch (Exception e) {
-			return String.format("There is a problem on system: %s", e.getMessage());
+			LOGGER.error(e.getMessage());
+			return new CommonResponse("06", e.getMessage());
 		}
 	}
 	
-	//getList
-	@GetMapping("/customers")
-	public List<PostCustomer> getAll() {
+	// update
+	@PutMapping(value="/customer")
+	public CommonResponse update(@RequestBody CustomerDto customer) throws ExceptionTemp {
 		try {
-			List<PostCustomer> list = customerDao.getList();
-			return list;
+			PostCustomer checkCustomer = customerDao.getById(customer.getCustomernumber());
+			if(checkCustomer == null) {
+				return new CommonResponse("404", "Customer Not Found");
+			}
+			
+			if(customer.getBirthdate()!=null) {
+				checkCustomer.setBirthdate(customer.getBirthdate());
+			}
+			if(customer.getFirstname()!=null) {
+				checkCustomer.setFirstname(customer.getFirstname());
+			}
+			if(customer.getLastname()!=null) {
+				checkCustomer.setLastname(customer.getLastname());
+			}
+			if(customer.getUsername()!=null) {
+				checkCustomer.setUsername(customer.getUsername());
+			}
+			if(customer.getPassword()!=null) {
+				checkCustomer.setPassword(customer.getPassword());
+			}
+			if(customer.getPhonenumber()!=null) {
+				checkCustomer.setPhonenumber(customer.getPhonenumber());
+			}
+			if(customer.getPhonetype()!=null) {
+				checkCustomer.setPhonetype(customer.getPhonetype());
+			}
+			
+			checkCustomer =  customerDao.save(checkCustomer);
+			
+			return new CommonResponse<CustomerDto>(modelMapper.map(checkCustomer, CustomerDto.class));
+		} catch (ExceptionTemp e) {
+			return new CommonResponse("01", e.getMessage());
 		} catch (Exception e) {
-			return null;
+			LOGGER.error(e.getMessage());
+			return new CommonResponse("06", e.getMessage());
+		}
+
+	}
+	
+	//get by id
+	@GetMapping("/customer/{customer}")
+	public CommonResponse getById(@PathVariable("customer") String customerNumber) throws ExceptionTemp {
+		LOGGER.info("customerNumber : {}", customerNumber);
+		try {
+			PostCustomer customer = customerDao.getById(Integer.parseInt(customerNumber));
+			return new CommonResponse<CustomerDto>(modelMapper.map(customer, CustomerDto.class));
+		} catch (ExceptionTemp e) {
+			LOGGER.error(e.getMessage());
+			return new CommonResponse("01", e.getMessage());
+		} catch (NumberFormatException e) {
+			LOGGER.error(e.getMessage());
+			return new CommonResponse("06", "Parameter should be number");
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage());
+			return new CommonResponse("06", e.getMessage());
+		}
+	}
+
+	
+	//getList
+	@GetMapping(value="/customers")
+	public CommonResponse getList(@RequestParam(name="customer", defaultValue="") String customer) throws ExceptionTemp {
+		try {
+			LOGGER.info("customer get list, params : {}", customer);
+			List<PostCustomer> customers = customerDao.getList();
+			return new CommonResponse<List<CustomerDto>>(customers.stream().map(cust ->
+			modelMapper.map(cust, CustomerDto.class)).collect(Collectors.toList()));
+		} catch (ExceptionTemp e) {
+			throw e;
+		} catch(NumberFormatException e) {
+			return new CommonResponse("01", e.getMessage());
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage());
+			return new CommonResponse("06", e.getMessage());
 		}
 	}
 	
 	// delete
-	@DeleteMapping("/customer/{custnumber}")
-	public void delete(PostCustomer customer) throws Exception {
-		customerDao.delete(customer);
+	@DeleteMapping(value="/customer/{customer}")
+	public CommonResponse delete(@PathVariable("customer") Integer custnumber) throws ExceptionTemp {
+		try {
+			PostCustomer checkCustomer = customerDao.getById(custnumber);
+			if(checkCustomer == null) {
+				return new CommonResponse("404", "Customer Not Found");
+			}
+			customerDao.delete(checkCustomer);
+			return new CommonResponse();
+		} catch (ExceptionTemp e) {
+			return new CommonResponse("01", e.getMessage());
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage());
+			return new CommonResponse("06", e.getMessage());
+		}
 	}
 }

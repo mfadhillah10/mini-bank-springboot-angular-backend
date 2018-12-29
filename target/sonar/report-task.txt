@@ -1,0 +1,6 @@
+projectKey=com.sti:bootcamp
+serverUrl=http://localhost:9000
+serverVersion=7.5.0.20543
+dashboardUrl=http://localhost:9000/dashboard?id=com.sti%3Abootcamp
+ceTaskId=AWfy7VgmPMqRV5WkxtmS
+ceTaskUrl=http://localhost:9000/api/ce/task?id=AWfy7VgmPMqRV5WkxtmS

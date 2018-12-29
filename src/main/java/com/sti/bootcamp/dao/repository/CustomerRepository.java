@@ -5,6 +5,6 @@ import com.sti.bootcamp.PostCustomer;
 
 public interface CustomerRepository extends PagingAndSortingRepository<PostCustomer, Integer> {
 	
-	PostCustomer findByCustomernumber(int cust_number);
+	PostCustomer findByCustomernumber(int custnumber);
 
 }
